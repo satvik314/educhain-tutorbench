@@ -1,0 +1,49 @@
+LLM ED BENCHMARKS
+
+Subject-Wise
+- Math
+- Physics
+- English
+- History
+
+(specific skills to be tested for each subject?)
+
+Areas to test
+- Guesstimates
+- Interview Logic Questions
+- Math
+- Bloom's Question
+- Explain like I am 10
+- Philosophical Questions 
+- Coding
+- Role Play (talk like Feynman)
+
+
+
+
+
+
+Sample Questions
+
+>>> Explain zero knwoledge proof like I am 10.
+
+>>> Give me some innovative applications Shor's algorithm
+
+>>> Explain Quantum Superposition with a real life example
+
+>>> Prove that there are finite prime numbers
+
+>>> Countable and Uncountable infinite
+
+>>> Pigen hole principle, halting problem
+
+>>> Give me a python code to create pydantic models for Quizs
+
+>>> "The more you sweat in peace, the less you bleed in war."  - explain this 
+
+
+
+
+(Is it able to internalise nuances of great teaching)
+>>> How is Richard Feynman's teaching different? Explain with an example
+>>> How can I apply knowledge of neuroplasticity to improve learning? 

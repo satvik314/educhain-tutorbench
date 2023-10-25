@@ -1,0 +1,13 @@
+--- Text-Models
+OpenHermesMistral-7B
+Arithmo-Mistral-7B
+WizardMath
+ToRA
+nexusraven
+everythinglm
+
+
+---- MultiModal
+Llava-13b
+Fuyu-8B
+
