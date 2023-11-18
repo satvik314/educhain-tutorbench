@@ -1,1 +1,1 @@
-# llm-model-benchmarks
+# llm-ed-benchmarks
