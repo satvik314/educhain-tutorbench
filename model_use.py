@@ -1,7 +1,7 @@
 from langchain_openai import ChatOpenAI
 import os
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 proprietary_models = ['openai/gpt-5', 'anthropic/claude-sonnet-4', 'google/gemini-2.5-pro' ]
 
@@ -9,12 +9,12 @@ open_source_models = ['deepseek/deepseek-v3.1-terminus', 'moonshotai/kimi-k2-090
 
 model_list = proprietary_models + open_source_models
 
-api_key = os.getenv("OPENROUTER_API_KEY")
+# api_key = os.getenv("OPENROUTER_API_KEY")
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-def get_responses_from_models(model_list, prompt, api_key = api_key):
+def get_responses_from_models(model_list, prompt, api_key):
     """
     Get responses from multiple models for a given prompt concurrently.
     
