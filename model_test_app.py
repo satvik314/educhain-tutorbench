@@ -1,10 +1,10 @@
 import streamlit as st
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 from model_use import get_responses_from_models, proprietary_models, open_source_models
 from supabase import create_client, Client
 import time
 
-load_dotenv()
+# load_dotenv()
 
 st.set_page_config(
     page_title="Model Response Comparator",
