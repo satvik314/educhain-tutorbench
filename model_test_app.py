@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 from dotenv import load_dotenv
 from model_use import get_responses_from_models, proprietary_models, open_source_models
 from supabase import create_client, Client
@@ -16,9 +15,9 @@ st.set_page_config(
 st.title("🤖 Model Response Comparator")
 st.write("Compare responses from different AI models side by side")
 
-api_key = os.getenv("OPENROUTER_API_KEY")
-supabase_url = os.getenv("SUPABASE_URL")
-supabase_key = os.getenv("SUPABASE_ANON_KEY")
+api_key = st.secrets["OPENROUTER_API_KEY"]
+supabase_url = st.secrets["SUPABASE_URL"]
+supabase_key = st.secrets["SUPABASE_ANON_KEY"]
 
 if not api_key:
     st.error("❌ OPENROUTER_API_KEY not found in environment variables. Please set it in your .env file.")
@@ -86,7 +85,8 @@ if st.button("🚀 Get Responses", type="primary"):
             start_time = time.time()
             responses = get_responses_from_models(selected_models, prompt, api_key)
             
-            # Store each model response in database
+            # Store each model response in database and collect response IDs
+            response_records = {}
             for model_name, response in responses.items():
                 response_time = int((time.time() - start_time) * 1000 / len(responses))
                 
@@ -108,36 +108,154 @@ if st.button("🚀 Get Responses", type="primary"):
                         "response_time_ms": response_time
                     }
                 
-                supabase.table("model_responses").insert(response_data).execute()
+                result = supabase.table("model_responses").insert(response_data).execute()
+                response_records[model_name] = {
+                    'id': result.data[0]['id'],
+                    'content': content if not isinstance(response, str) or not response.startswith("Error:") else None,
+                    'error': response if isinstance(response, str) and response.startswith("Error:") else None
+                }
+            
+            # Store response_records in session state for feedback forms
+            st.session_state.current_responses = response_records
+            st.session_state.current_prompt_id = prompt_id
             
             # Update prompt status to completed
             supabase.table("prompts").update({"status": "completed"}).eq("id", prompt_id).execute()
             
             st.success(f"✅ Got responses from {len(responses)} models and saved to database!")
             
-            cols = st.columns(min(len(responses), 3))
-            
-            for i, (model_name, response) in enumerate(responses.items()):
-                col_index = i % len(cols)
-                
-                with cols[col_index]:
-                    st.subheader(f"🔹 {model_name}")
-                    
-                    if isinstance(response, str) and response.startswith("Error:"):
-                        st.error(response)
-                    else:
-                        if hasattr(response, 'content'):
-                            st.write(response.content)
-                        else:
-                            st.write(str(response))
-                    
-                    st.divider()
-                    
         except Exception as e:
             # Update prompt status to failed if something went wrong
             if 'prompt_id' in locals():
                 supabase.table("prompts").update({"status": "failed"}).eq("id", prompt_id).execute()
             st.error(f"An error occurred: {str(e)}")
+
+# Display responses with feedback forms
+if 'current_responses' in st.session_state and st.session_state.current_responses:
+    st.markdown("---")
+    st.subheader("📝 Model Responses & Feedback")
+    
+    response_records = st.session_state.current_responses
+    prompt_id = st.session_state.current_prompt_id
+    
+    # Create columns for responses
+    num_responses = len(response_records)
+    cols = st.columns(min(num_responses, 3))
+    
+    feedback_data = {}
+    
+    for i, (model_name, record) in enumerate(response_records.items()):
+        col_index = i % len(cols)
+        
+        with cols[col_index]:
+            st.subheader(f"🔹 {model_name}")
+            
+            # Display response content
+            if record['error']:
+                st.error(record['error'])
+            else:
+                st.write(record['content'])
+            
+            st.markdown("---")
+            
+            # Feedback form
+            st.markdown(f"**Rate {model_name}:**")
+            
+            # Star rating
+            rating = st.selectbox(
+                "⭐ Rating (1-5 stars)",
+                options=[None, 1, 2, 3, 4, 5],
+                format_func=lambda x: "Select rating..." if x is None else f"{'⭐' * x} ({x}/5)",
+                key=f"rating_{model_name}_{i}"
+            )
+            
+            # Text feedback
+            feedback_text = st.text_area(
+                "💬 Feedback (optional)",
+                placeholder="Enter your thoughts about this response...",
+                key=f"feedback_{model_name}_{i}",
+                height=100
+            )
+            
+            # Ranking
+            rank = st.selectbox(
+                "🏆 Rank this response",
+                options=[None] + list(range(1, num_responses + 1)),
+                format_func=lambda x: "Select rank..." if x is None else f"#{x} {'🥇' if x == 1 else '🥈' if x == 2 else '🥉' if x == 3 else ''}",
+                key=f"rank_{model_name}_{i}"
+            )
+            
+            # Store feedback data for submission
+            feedback_data[model_name] = {
+                'response_id': record['id'],
+                'rating': rating,
+                'feedback_text': feedback_text.strip() if feedback_text.strip() else None,
+                'rank': rank
+            }
+            
+            st.divider()
+    
+    # Submit feedback button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("💾 Submit All Feedback", type="primary", use_container_width=True):
+            try:
+                feedback_submitted = False
+                
+                for model_name, feedback in feedback_data.items():
+                    # Only submit if user provided any feedback
+                    if feedback['rating'] or feedback['feedback_text'] or feedback['rank']:
+                        feedback_record = {
+                            "response_id": feedback['response_id'],
+                            "prompt_id": prompt_id,
+                            "username": username.strip() if username.strip() else None,
+                            "rating": feedback['rating'],
+                            "feedback_text": feedback['feedback_text'],
+                            "rank_position": feedback['rank']
+                        }
+                        
+                        # Check if feedback already exists for this response and user
+                        existing = supabase.table("response_feedback")\
+                            .select("id")\
+                            .eq("response_id", feedback['response_id'])\
+                            .eq("username", username.strip() if username.strip() else None)\
+                            .execute()
+                        
+                        if existing.data:
+                            # Update existing feedback
+                            supabase.table("response_feedback")\
+                                .update(feedback_record)\
+                                .eq("id", existing.data[0]["id"])\
+                                .execute()
+                        else:
+                            # Insert new feedback
+                            supabase.table("response_feedback").insert(feedback_record).execute()
+                        
+                        feedback_submitted = True
+                
+                if feedback_submitted:
+                    st.success("✅ Feedback submitted successfully!")
+                    st.balloons()
+                else:
+                    st.warning("⚠️ No feedback provided. Please rate, comment, or rank at least one response.")
+                    
+            except Exception as e:
+                st.error(f"Error submitting feedback: {str(e)}")
+    
+    # Analytics section
+    st.markdown("---")
+    with st.expander("📊 Model Performance Analytics", expanded=False):
+        try:
+            analytics = supabase.table("response_ratings_summary").select("*").execute()
+            if analytics.data:
+                import pandas as pd
+                df = pd.DataFrame(analytics.data)
+                df = df.sort_values('avg_rating', ascending=False)
+                st.dataframe(df, use_container_width=True)
+            else:
+                st.info("No ratings data available yet.")
+        except Exception as e:
+            st.error(f"Error loading analytics: {str(e)}")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Instructions:**")
@@ -145,5 +263,6 @@ st.sidebar.markdown("1. Enter username (optional)")
 st.sidebar.markdown("2. Select one or more models")
 st.sidebar.markdown("3. Enter your prompt")
 st.sidebar.markdown("4. Click 'Get Responses'")
-st.sidebar.markdown("5. Compare responses side by side")
-st.sidebar.markdown("6. All responses are saved to database")
+st.sidebar.markdown("5. Rate and provide feedback")
+st.sidebar.markdown("6. Rank responses and submit feedback")
+st.sidebar.markdown("7. View analytics in expandable section")
