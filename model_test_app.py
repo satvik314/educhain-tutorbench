@@ -7,12 +7,12 @@ import time
 # load_dotenv()
 
 st.set_page_config(
-    page_title="Model Response Comparator",
+    page_title="Educhain TutorBench",
     page_icon="🤖",
     layout="wide"
 )
 
-st.title("🤖 Model Response Comparator")
+st.title("🤖 Educhain TutorBench")
 st.write("Compare responses from different AI models side by side")
 
 api_key = st.secrets["OPENROUTER_API_KEY"]
