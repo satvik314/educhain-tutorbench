@@ -1,13 +1,15 @@
---- Text-Models
-OpenHermesMistral-7B
-Arithmo-Mistral-7B
-WizardMath
-ToRA
-nexusraven
-everythinglm
+SET 1: Testing
 
 
----- MultiModal
-Llava-13b
-Fuyu-8B
+--- Closed Source
+GPT-5
+Claude Sonnet 4
+Gemini 2.5 Pro
+Grok 4 Fast
+
+---- Open Source
+DeepSeek V3.1
+Kimi K2
+
+
 

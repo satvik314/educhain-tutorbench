@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+.streamlit
+
+testing_qs.txt
+model_list.txt
+LLM Benchmark for Educational Effectiveness.md
+
 # C extensions
 *.so
 
