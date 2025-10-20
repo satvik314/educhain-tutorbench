@@ -38,33 +38,33 @@ st.sidebar.header("Model Selection")
 if 'selected_models_dict' not in st.session_state:
     st.session_state.selected_models_dict = {}
 
-# Create checkboxes for each provider in expanders
+# Create checkboxes for each provider
 selected_models = []
 
 for provider, models in MODELS_BY_PROVIDER.items():
-    with st.sidebar.expander(f"**{provider}**", expanded=False):
-        for model in models:
-            # Create a unique key for each checkbox
-            checkbox_key = f"checkbox_{model}"
+    st.sidebar.markdown(f"**{provider}**")
+    for model in models:
+        # Create a unique key for each checkbox
+        checkbox_key = f"checkbox_{model}"
 
-            # Initialize session state for this model if not exists
-            if checkbox_key not in st.session_state.selected_models_dict:
-                st.session_state.selected_models_dict[checkbox_key] = False
+        # Initialize session state for this model if not exists
+        if checkbox_key not in st.session_state.selected_models_dict:
+            st.session_state.selected_models_dict[checkbox_key] = False
 
-            # Create checkbox
-            is_selected = st.checkbox(
-                model.split('/')[-1],  # Show only model name without provider prefix
-                value=st.session_state.selected_models_dict[checkbox_key],
-                key=checkbox_key,
-                help=model  # Show full model path on hover
-            )
+        # Create checkbox
+        is_selected = st.sidebar.checkbox(
+            model.split('/')[-1],  # Show only model name without provider prefix
+            value=st.session_state.selected_models_dict[checkbox_key],
+            key=checkbox_key,
+            help=model  # Show full model path on hover
+        )
 
-            # Update session state
-            st.session_state.selected_models_dict[checkbox_key] = is_selected
+        # Update session state
+        st.session_state.selected_models_dict[checkbox_key] = is_selected
 
-            # Add to selected models list if checked
-            if is_selected:
-                selected_models.append(model)
+        # Add to selected models list if checked
+        if is_selected:
+            selected_models.append(model)
 
 if not selected_models:
     st.warning("⚠️ Please select at least one model from the sidebar.")
@@ -278,7 +278,7 @@ if 'current_responses' in st.session_state and st.session_state.current_response
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Instructions:**")
 st.sidebar.markdown("1. Enter username (optional)")
-st.sidebar.markdown("2. Expand provider sections and check models")
+st.sidebar.markdown("2. Select models using checkboxes")
 st.sidebar.markdown("3. Enter your prompt")
 st.sidebar.markdown("4. Click 'Get Responses'")
 st.sidebar.markdown("5. Rate and provide feedback")
