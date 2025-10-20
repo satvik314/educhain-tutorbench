@@ -3,10 +3,54 @@ import os
 # from dotenv import load_dotenv
 # load_dotenv()
 
+# All available models organized by provider
+MODELS_BY_PROVIDER = {
+    "Anthropic": [
+        "anthropic/claude-sonnet-4.5",
+        "anthropic/claude-haiku-4.5",
+    ],
+    "OpenAI": [
+        "openai/gpt-5",
+        "openai/gpt-5-mini",
+        "openai/gpt-4.1",
+    ],
+    "Google": [
+        "google/gemini-2.5-pro",
+        "google/gemini-2.5-flash",
+        "google/gemini-2.5-flash-lite",
+        "google/gemma-3-27b-it:free",
+    ],
+    "DeepSeek": [
+        "deepseek/deepseek-chat-v3-0324",
+        "deepseek/deepseek-v3.1-terminus",
+        "deepseek/deepseek-v3.2-exp",
+    ],
+    "X-AI": [
+        "x-ai/grok-4-fast",
+    ],
+    "Z-AI": [
+        "z-ai/glm-4.6",
+        "z-ai/glm-4.5-air",
+    ],
+    "Qwen": [
+        "qwen/qwen3-235b-a22b-2507",
+        "qwen/qwen3-max",
+        "qwen/qwen3-14b:free",
+    ],
+    "MoonshotAI": [
+        "moonshotai/kimi-k2-0905",
+    ],
+    "Nvidia": [
+        "nvidia/nemotron-nano-9b-v2:free",
+    ],
+}
+
+# Flatten all models into a single list (for backward compatibility)
+all_models = [model for models in MODELS_BY_PROVIDER.values() for model in models]
+
+# Legacy variables (deprecated but kept for compatibility)
 proprietary_models = ['openai/gpt-5', 'anthropic/claude-sonnet-4', 'google/gemini-2.5-pro' ]
-
 open_source_models = ['deepseek/deepseek-v3.1-terminus', 'moonshotai/kimi-k2-0905']
-
 model_list = proprietary_models + open_source_models
 
 # api_key = os.getenv("OPENROUTER_API_KEY")
