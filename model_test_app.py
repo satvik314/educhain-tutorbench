@@ -1,6 +1,6 @@
 import streamlit as st
 # from dotenv import load_dotenv
-from model_use import get_responses_from_models, proprietary_models, open_source_models
+from model_use import get_responses_from_models, MODELS_BY_PROVIDER
 from supabase import create_client, Client
 import time
 
@@ -34,19 +34,37 @@ username = st.sidebar.text_input("👤 Username (optional)", placeholder="Enter 
 
 st.sidebar.header("Model Selection")
 
-proprietary_selected = st.sidebar.multiselect(
-    "🏢 Proprietary Models",
-    proprietary_models,
-    default=[]
-)
+# Initialize session state for model selections if not exists
+if 'selected_models_dict' not in st.session_state:
+    st.session_state.selected_models_dict = {}
 
-open_source_selected = st.sidebar.multiselect(
-    "🌟 Open Source Models", 
-    open_source_models,
-    default=[]
-)
+# Create checkboxes for each provider in expanders
+selected_models = []
 
-selected_models = proprietary_selected + open_source_selected
+for provider, models in MODELS_BY_PROVIDER.items():
+    with st.sidebar.expander(f"**{provider}**", expanded=False):
+        for model in models:
+            # Create a unique key for each checkbox
+            checkbox_key = f"checkbox_{model}"
+
+            # Initialize session state for this model if not exists
+            if checkbox_key not in st.session_state.selected_models_dict:
+                st.session_state.selected_models_dict[checkbox_key] = False
+
+            # Create checkbox
+            is_selected = st.checkbox(
+                model.split('/')[-1],  # Show only model name without provider prefix
+                value=st.session_state.selected_models_dict[checkbox_key],
+                key=checkbox_key,
+                help=model  # Show full model path on hover
+            )
+
+            # Update session state
+            st.session_state.selected_models_dict[checkbox_key] = is_selected
+
+            # Add to selected models list if checked
+            if is_selected:
+                selected_models.append(model)
 
 if not selected_models:
     st.warning("⚠️ Please select at least one model from the sidebar.")
@@ -260,7 +278,7 @@ if 'current_responses' in st.session_state and st.session_state.current_response
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Instructions:**")
 st.sidebar.markdown("1. Enter username (optional)")
-st.sidebar.markdown("2. Select one or more models")
+st.sidebar.markdown("2. Expand provider sections and check models")
 st.sidebar.markdown("3. Enter your prompt")
 st.sidebar.markdown("4. Click 'Get Responses'")
 st.sidebar.markdown("5. Rate and provide feedback")
